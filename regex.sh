@@ -33,6 +33,8 @@ letter5_is_not=
 ###############################################
 ## Do not edit below
 ###############################################
+NEWLINE='\
+'
 letter1block=${letter1_is:-^${letter1_is_not:-,}${not_anywhere}}
 letter2block=${letter2_is:-^${letter2_is_not:-,}${not_anywhere}}
 letter3block=${letter3_is:-^${letter3_is_not:-,}${not_anywhere}}
@@ -44,21 +46,21 @@ narrowed_down=$(cat wordle-allowed-guesses.txt | grep -e "[$letter1block][$lette
 
 for letter in ${yes_letters//,/ }; do
   #echo "Narrowing further by requiring: $letter";
-  narrowed_down=$(echo $narrowed_down | sed 's/ /\n/g' | grep "$letter")
+  narrowed_down=$(echo $narrowed_down | sed -E "s/ /${NEWLINE}/g" | grep "$letter")
 done
 
 
 case $1 in
   unique)
-    for word in `echo "$narrowed_down" | sed 's/ /\n/g'`; do
+    for word in `echo "$narrowed_down" | sed -E "s/ /${NEWLINE}/g"`; do
       length=$(grep -o . <<< $word | sort -u | paste -s -d '\0' - | awk '{ print length }')
       if [[ $length > 4 ]]; then echo $word; fi
     done
     ;;
   count)
-    echo "$narrowed_down" | sed 's/./&\n/g' | sort | uniq -ic | sort -n
+    echo "$narrowed_down" | sed -E "s/./&${NEWLINE}/g" | sort | uniq -ic | sort -n
     ;;
   *)
-    echo $narrowed_down | sed 's/ /\n/g'
+    echo $narrowed_down | sed -E "s/ /${NEWLINE}/g"
     ;;
 esac
